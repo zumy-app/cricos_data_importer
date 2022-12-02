@@ -37,17 +37,14 @@ fun sheetToMap(s: Sheet){
 val institutions = mutableListOf<Institution>()
     s.map { r ->
         if(r.rowNum>2) {
-
             if(r!!.getCell(0)!=null)
             {
             val i = createInstitution(r)
-        println("Adding ${i.cricos_provider_code}")
             institutions.add(i)
-
             }
         }
     }
-    print(institutions.size)
+    print("Parsed ${institutions.size} institutions")
 }
 
 fun createInstitution(r: Row?): Institution {
@@ -130,7 +127,12 @@ Field of Education Level 3
 
 
      */
-    val field_of_education:Boolean,
+    val field_of_education_1_braod:String,
+    val field_of_education_1_narrow:String,
+    val field_of_education_1_detailed:String,
+    val field_of_education_2_braod:String,
+    val field_of_education_2_narrow:String,
+    val field_of_education_2_detailed:String,
     val course_level:Course_Level,
     val foundation_studies:Boolean,
     val work_component:Boolean,
@@ -146,6 +148,23 @@ Field of Education Level 3
     val currency:Currency
 )
 
+/*class FieldOfEducationL1(
+    val id: Double,
+    val name:String,
+    val child: MutableList<FieldOfEducationL2>
+)
+
+class FieldOfEducationL2(
+    val id: Double,
+    val name:String,
+    val child: MutableList<FieldOfEducationL3>
+)
+
+class FieldOfEducationL3(
+    val id: Double,
+    val name:String
+)*/
+
 
 class Location(
     name:String,
@@ -154,7 +173,7 @@ class Location(
     address: Address,
 )
 
-enum class Location_Type(val locatoin:String) {
+enum class Location_Type(val location:String) {
 OWNED("Location owned and operated by provider"),
 REG_PROVIDER("Arrangement with other registered provider"),
 NON_REG_PROVIDER("Arrangement with Non registered provider")
