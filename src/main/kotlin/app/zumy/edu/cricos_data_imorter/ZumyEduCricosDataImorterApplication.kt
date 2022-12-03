@@ -28,12 +28,18 @@ fun readFromExcelFile(filepath: String) {
     val columnNumber = 0
 
     //Get reference to first sheet:
-    val xlWs = xlWb.getSheetAt(1)
-    println(xlWs.getRow(rowNumber).getCell(columnNumber))
-    sheetToMap(xlWs)
+
+    val institutions = parseInstitutions(xlWb.getSheetAt(1))
+    val courses = parseCourses(xlWb.getSheetAt(2))
+    val locations = parseCourses(xlWb.getSheetAt(2))
+    val course_locations = parseCourses(xlWb.getSheetAt(2))
 }
 
-fun sheetToMap(s: Sheet){
+
+
+
+
+fun parseInstitutions(s: Sheet): MutableList<Institution> {
 val institutions = mutableListOf<Institution>()
     s.map { r ->
         if(r.rowNum>2) {
@@ -45,6 +51,8 @@ val institutions = mutableListOf<Institution>()
         }
     }
     print("Parsed ${institutions.size} institutions")
+
+    return institutions
 }
 
 fun createInstitution(r: Row?): Institution {
@@ -68,6 +76,53 @@ fun createInstitution(r: Row?): Institution {
         ),
 mutableListOf()
     )
+
+}
+
+fun parseCourses(s: Sheet): List<Course> {
+    val courses = mutableListOf<Course>()
+    s.map { r ->
+        if(r.rowNum>2) {
+            if(r!!.getCell(0)!=null)
+            {
+                val i = createCourse(r)
+                courses.add(i)
+            }
+        }
+    }
+    print("Parsed ${courses.size} courses")
+
+    return courses
+}
+
+fun createCourse(r: Row?): Course {
+
+    return Course(
+        r!!.getCell(0).stringCellValue,
+        r!!.getCell(2).stringCellValue,
+        r!!.getCell(3).stringCellValue,
+        r!!.getCell(4).stringCellValue,
+        if(r!!.getCell(5).stringCellValue=="No") false else true,
+        r!!.getCell(6).stringCellValue,
+        r!!.getCell(7).stringCellValue,
+        r!!.getCell(8).stringCellValue,
+        r!!.getCell(9).stringCellValue,
+        r!!.getCell(10).stringCellValue,
+        r!!.getCell(11).stringCellValue,
+        r!!.getCell(12).stringCellValue,
+        if(r!!.getCell(13).stringCellValue=="No") false else true,
+        if(r!!.getCell(14).stringCellValue=="No") false else true,
+        r!!.getCell(15).numericCellValue,
+        r!!.getCell(16).numericCellValue,
+        r!!.getCell(17).numericCellValue,
+        Language.ENGLISH,
+        r!!.getCell(18).numericCellValue,
+        r!!.getCell(19).numericCellValue,
+        r!!.getCell(20).numericCellValue,
+        r!!.getCell(21).numericCellValue,
+        if(r!!.getCell(22).stringCellValue=="No") false else true,
+        Currency.AUD
+        )
 
 }
 
@@ -133,17 +188,17 @@ Field of Education Level 3
     val field_of_education_2_braod:String,
     val field_of_education_2_narrow:String,
     val field_of_education_2_detailed:String,
-    val course_level:Course_Level,
+    val course_level:String,
     val foundation_studies:Boolean,
     val work_component:Boolean,
-    val work_component_hours_per_week:Float,
-    val work_component_weeks:Int,
-    val work_component_total_hours:Int,
+    val work_component_hours_per_week:Double,
+    val work_component_weeks:Double,
+    val work_component_total_hours:Double,
     val language:Language,
-    val duration:Int,
-    val tuition_fee:Float,
-    val non_tuition:Int,
-    val estimated_course_total:Int,
+    val duration:Double,
+    val tuition_fee:Double,
+    val non_tuition:Double,
+    val estimated_course_total:Double,
     val expired:Boolean,
     val currency:Currency
 )
