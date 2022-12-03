@@ -31,11 +31,9 @@ fun readFromExcelFile(filepath: String) {
 
     val institutions = parseInstitutions(xlWb.getSheetAt(1))
     val courses = parseCourses(xlWb.getSheetAt(2))
-    val locations = parseCourses(xlWb.getSheetAt(2))
+    val locations:MutableList<Location> = parseLocations(xlWb.getSheetAt(3))
     val course_locations = parseCourses(xlWb.getSheetAt(2))
 }
-
-
 
 
 
@@ -126,8 +124,42 @@ fun createCourse(r: Row?): Course {
 
 }
 
+fun parseLocations(s: Sheet): MutableList<Location> {
+    val locations = mutableListOf<Location>()
+    s.map { r ->
+        if(r.rowNum>2) {
+            if(r!!.getCell(0)!=null)
+            {
+                val i = createLocation(r)
+                locations.add(i)
+            }
+        }
+    }
+    print("Parsed ${locations.size} locations")
+
+    return locations
+}
+
+fun createLocation(r: Row): Location {
+    return Location(
+        r!!.getCell(0).stringCellValue,
+        r!!.getCell(2).stringCellValue,
+        r!!.getCell(3).stringCellValue,
+        Address(
+            r!!.getCell(4).stringCellValue,
+            r!!.getCell(5).stringCellValue,
+            r!!.getCell(6).stringCellValue,
+            r!!.getCell(7).stringCellValue,
+            r!!.getCell(8).stringCellValue,
+            r!!.getCell(9).stringCellValue,
+            r!!.getCell(6).stringCellValue,
+            Country.AUS
+        )
+    )
+}
+
 class Institution (
-    val cricos_provider_code: String,
+    val cricosProviderCode: String,
     val trading_name:String,
     val institution_name:String,
     val type: InstitutionType,
@@ -157,7 +189,7 @@ AUS
 
 class Course (
     //foreign
-    val cricos_provider_code: String,
+    val cricosProviderCode: String,
     //Primary
     val cricos_course_code: String,
     val course_name:String,
@@ -222,9 +254,9 @@ class FieldOfEducationL3(
 
 
 class Location(
-    name:String,
-    primary:Boolean,
-    type: Location_Type,
+    cricosProviderCode: String,
+    name: String,
+    type: String,
     address: Address,
 )
 
