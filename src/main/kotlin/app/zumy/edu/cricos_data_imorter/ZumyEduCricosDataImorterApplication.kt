@@ -31,10 +31,36 @@ fun readFromExcelFile(filepath: String) {
 
     val institutions = parseInstitutions(xlWb.getSheetAt(1))
     val courses = parseCourses(xlWb.getSheetAt(2))
-    val locations:MutableList<Location> = parseLocations(xlWb.getSheetAt(3))
-    val course_locations = parseCourses(xlWb.getSheetAt(2))
+    val locations = parseLocations(xlWb.getSheetAt(3))
+    val course_locations: MutableList<CourseLocation> = parseCourseLocations(xlWb.getSheetAt(4))
 }
 
+fun parseCourseLocations(s: Sheet): MutableList<CourseLocation> {
+    val courseLocations = mutableListOf<CourseLocation>()
+    s.map { r ->
+        if(r.rowNum>2) {
+            if(r!!.getCell(0)!=null)
+            {
+                val i = createCourseLocation(r)
+                courseLocations.add(i)
+            }
+        }
+    }
+    print("Parsed ${courseLocations.size} courseLocations")
+
+    return courseLocations
+}
+
+fun createCourseLocation(r: Row): CourseLocation {
+    return CourseLocation(
+        r!!.getCell(0).stringCellValue,
+        r!!.getCell(2).stringCellValue,
+        r!!.getCell(3).stringCellValue,
+        r!!.getCell(4).stringCellValue,
+        r!!.getCell(5).stringCellValue,
+        Country.AUS
+    )
+}
 
 
 fun parseInstitutions(s: Sheet): MutableList<Institution> {
@@ -260,6 +286,14 @@ class Location(
     address: Address,
 )
 
+class CourseLocation(
+    cricosProviderCode:String,
+    cricosCourseCode: String,
+    locationName:String,
+    city:String,
+    state:String,
+    country: Country
+)
 enum class Location_Type(val location:String) {
 OWNED("Location owned and operated by provider"),
 REG_PROVIDER("Arrangement with other registered provider"),
@@ -279,3 +313,4 @@ DIPLOMA("Diploma"),
 SEC_CERT("Senior Secondary Certificate of Education"),
     CERTIII("Certificate III")
 }
+
