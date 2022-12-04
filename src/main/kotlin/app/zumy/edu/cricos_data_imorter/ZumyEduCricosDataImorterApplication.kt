@@ -33,6 +33,7 @@ fun readFromExcelFile(filepath: String) {
     val courses = parseCourses(xlWb.getSheetAt(2))
     val locations = parseLocations(xlWb.getSheetAt(3))
     val course_locations: MutableList<CourseLocation> = parseCourseLocations(xlWb.getSheetAt(4))
+    println("Processing complete")
 }
 
 fun parseCourseLocations(s: Sheet): MutableList<CourseLocation> {
@@ -140,11 +141,11 @@ fun createCourse(r: Row?): Course {
         r!!.getCell(16).numericCellValue,
         r!!.getCell(17).numericCellValue,
         Language.ENGLISH,
-        r!!.getCell(18).numericCellValue,
         r!!.getCell(19).numericCellValue,
-        r!!.getCell(20).numericCellValue,
+        if(r!!.getCell(20).stringCellValue.isBlank()) 0.0 else r!!.getCell(20).numericCellValue,
         r!!.getCell(21).numericCellValue,
-        if(r!!.getCell(22).stringCellValue=="No") false else true,
+        r!!.getCell(22).numericCellValue,
+        if(r!!.getCell(23).stringCellValue=="No") false else true,
         Currency.AUD
         )
 
@@ -217,10 +218,10 @@ class Course (
     //foreign
     val cricosProviderCode: String,
     //Primary
-    val cricos_course_code: String,
-    val course_name:String,
-    val vet_national_code: String,
-    val dual_qualification:Boolean,
+    val cricosCourseCode: String,
+    val name:String,
+    val vetNationalCode: String,
+    val dualQualification:Boolean,
     /*
     Field of Education Table - Level 1
 
@@ -248,7 +249,7 @@ Field of Education Level 3
     val field_of_education_2_detailed:String,
     val course_level:String,
     val foundation_studies:Boolean,
-    val work_component:Boolean,
+    val work_component:Boolean, //14
     val work_component_hours_per_week:Double,
     val work_component_weeks:Double,
     val work_component_total_hours:Double,
