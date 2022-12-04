@@ -1,5 +1,6 @@
 package app.zumy.edu.cricos_data_imorter
 
+import org.apache.poi.ss.usermodel.Cell
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.ss.usermodel.WorkbookFactory
@@ -142,13 +143,22 @@ fun createCourse(r: Row?): Course {
         r!!.getCell(17).numericCellValue,
         Language.ENGLISH,
         r!!.getCell(19).numericCellValue,
-        if(r!!.getCell(20).stringCellValue.isBlank()) 0.0 else r!!.getCell(20).numericCellValue,
-        r!!.getCell(21).numericCellValue,
+        parseNumber(r!!.getCell(20)),
+        parseNumber(r!!.getCell(21)),
         r!!.getCell(22).numericCellValue,
         if(r!!.getCell(23).stringCellValue=="No") false else true,
         Currency.AUD
         )
 
+}
+
+fun parseNumber(c: Cell): Double {
+   try{
+       return c.numericCellValue
+   }
+   catch(e: IllegalStateException){
+       return 0.0
+   }
 }
 
 fun parseLocations(s: Sheet): MutableList<Location> {
