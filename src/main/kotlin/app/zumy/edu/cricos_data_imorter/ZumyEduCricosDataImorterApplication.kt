@@ -1,21 +1,53 @@
 package app.zumy.edu.cricos_data_imorter
 
+import com.google.auth.oauth2.GoogleCredentials
+import com.google.firebase.FirebaseApp
+import com.google.firebase.FirebaseOptions
+import com.google.firebase.cloud.FirestoreClient
 import org.apache.poi.ss.usermodel.Cell
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
+import org.springframework.stereotype.Service
 import java.io.FileInputStream
+import java.io.Serializable
+import javax.annotation.PostConstruct
+
 
 @SpringBootApplication
 class ZumyEduCricosDataImorterApplication
 
 fun main(args: Array<String>) {
+    val classLoader = Thread.currentThread().contextClassLoader
+    val serviceAccount = classLoader.getResourceAsStream("service-account-file.json")
+    val options = FirebaseOptions.builder()
+        .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+        .build()
+
+    FirebaseApp.initializeApp(options)
 
     val filepath = "src/main/resources/cricos-providers-courses-and-locations-as-at-2022-10-4-11-02-16.xlsx"
     readFromExcelFile(filepath)
     runApplication<ZumyEduCricosDataImorterApplication>(*args)
+}
+
+@Service
+class FBInitialize {
+    @PostConstruct
+    fun initialize() {
+        try {
+
+            val options = FirebaseOptions.builder()
+                .setCredentials(GoogleCredentials.getApplicationDefault())
+                .build()
+            FirebaseApp.initializeApp(options)
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 }
 
 fun readFromExcelFile(filepath: String) {
@@ -33,8 +65,40 @@ fun readFromExcelFile(filepath: String) {
     val institutions = parseInstitutions(xlWb.getSheetAt(1))
     val courses = parseCourses(xlWb.getSheetAt(2))
     val locations = parseLocations(xlWb.getSheetAt(3))
-    val course_locations: MutableList<CourseLocation> = parseCourseLocations(xlWb.getSheetAt(4))
+    val courseLocations: MutableList<CourseLocation> = parseCourseLocations(xlWb.getSheetAt(4))
     println("Processing complete")
+/*    saveInstitutions(institutions)
+    saveCourses( courses)*/
+    saveLocations( locations)
+    saveCourseLocations(courseLocations)
+}
+
+fun saveInstitutions(ins:MutableList<Institution>){
+    ins.forEach{
+        i-> writeToDB("institutions", i.cricosProviderCode, i)
+    }
+}
+fun saveCourses(ins:List<Course>){
+    ins.forEach{
+            i-> writeToDB("courses", i.cricosCourseCode, i)
+    }
+}
+
+fun saveLocations(ins:MutableList<Location>){
+    ins.forEach{
+            i-> writeToDB("locations", i.name, i)
+    }
+}
+
+fun saveCourseLocations(ins:MutableList<CourseLocation>){
+    ins.forEach{
+            i-> writeToDB("course_locations", i.cricosProviderCode, i)
+    }
+}
+
+fun writeToDB(coll: String, docName: String, data: Any){
+val db = FirestoreClient.getFirestore()
+    db.collection(coll).document(docName).set(data)
 }
 
 fun parseCourseLocations(s: Sheet): MutableList<CourseLocation> {
@@ -195,7 +259,7 @@ fun createLocation(r: Row): Location {
     )
 }
 
-class Institution (
+data class Institution(
     val cricosProviderCode: String,
     val trading_name:String,
     val institution_name:String,
@@ -204,7 +268,7 @@ class Institution (
     val website:String,
     val address: Address,
     val  locations: MutableList<Location>,
-        ) {
+        ) : Serializable {
 }
     enum class InstitutionType {
     GOV,PRIVATE
@@ -218,7 +282,7 @@ class Address(
     val state:String,
     val postal:String,
     val country:Country,
-)
+): Serializable
 
 enum class Country {
 AUS
@@ -270,7 +334,7 @@ Field of Education Level 3
     val estimated_course_total:Double,
     val expired:Boolean,
     val currency:Currency
-)
+): Serializable
 
 /*class FieldOfEducationL1(
     val id: Double,
@@ -290,21 +354,21 @@ class FieldOfEducationL3(
 )*/
 
 
-class Location(
-    cricosProviderCode: String,
-    name: String,
-    type: String,
-    address: Address,
-)
+data class Location(
+   val cricosProviderCode: String,
+   val name: String,
+   val  type: String,
+   val  address: Address,
+): Serializable
 
-class CourseLocation(
-    cricosProviderCode:String,
-    cricosCourseCode: String,
-    locationName:String,
-    city:String,
-    state:String,
-    country: Country
-)
+data class CourseLocation(
+    val cricosProviderCode:String,
+    val cricosCourseCode: String,
+    val locationName:String,
+    val city:String,
+    val state:String,
+    val  country: Country
+): Serializable
 enum class Location_Type(val location:String) {
 OWNED("Location owned and operated by provider"),
 REG_PROVIDER("Arrangement with other registered provider"),
