@@ -1,6 +1,7 @@
 package app.zumy.edu.cricos_data_imorter
 
 import com.google.auth.oauth2.GoogleCredentials
+import com.google.cloud.firestore.FieldValue
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.cloud.FirestoreClient
@@ -8,15 +9,25 @@ import org.apache.poi.ss.usermodel.Cell
 import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.ss.usermodel.WorkbookFactory
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
 import org.springframework.boot.runApplication
 import org.springframework.stereotype.Service
 import java.io.FileInputStream
 import java.io.Serializable
+import java.time.LocalDate
+import java.util.*
 import javax.annotation.PostConstruct
 
 
 @SpringBootApplication
+@EnableAutoConfiguration(exclude = [
+    DataSourceAutoConfiguration::class,
+    DataSourceTransactionManagerAutoConfiguration::class,
+    HibernateJpaAutoConfiguration::class])
 class ZumyEduCricosDataImorterApplication
 
 fun main(args: Array<String>) {
@@ -28,7 +39,7 @@ fun main(args: Array<String>) {
 
     FirebaseApp.initializeApp(options)
 
-    val filepath = "src/main/resources/cricos-providers-courses-and-locations-as-at-2022-10-4-11-02-16.xlsx"
+    val filepath = "src/main/resources/cricos-providers-courses-and-locations-as-at-2023-1-3-7-59-17.xlsx"
     readFromExcelFile(filepath)
     runApplication<ZumyEduCricosDataImorterApplication>(*args)
 }
@@ -66,11 +77,30 @@ fun readFromExcelFile(filepath: String) {
     val courses = parseCourses(xlWb.getSheetAt(2))
     val locations = parseLocations(xlWb.getSheetAt(3))
     val courseLocations: MutableList<CourseLocation> = parseCourseLocations(xlWb.getSheetAt(4))
+
+    //Create initial state of the db i.e create empty collections for institutions, courses, locations, course_locations
+    //separate for each db
+    val version = "2023-01-03"
+    prepareDB(version)
+
+    //function that starts saving all the data
+    save()
     println("Processing complete")
-/*    saveInstitutions(institutions)
-    saveCourses( courses)*/
+}
+
+fun save(){
+    /*    saveInstitutions(institutions)
+    saveCourses( courses)
     saveLocations( locations)
-    saveCourseLocations(courseLocations)
+    saveCourseLocations(courseLocations)*/
+}
+
+//create an empty collection for the version and within
+fun prepareDB(version: String){
+    val db = FirestoreClient.getFirestore()
+
+    db.collection("data").document(version)
+
 }
 
 fun saveInstitutions(ins:MutableList<Institution>){
@@ -85,6 +115,7 @@ fun saveCourses(ins:List<Course>){
 }
 
 fun saveLocations(ins:MutableList<Location>){
+    val db = FirestoreClient.getFirestore()
     ins.forEach{
             i-> writeToDB("locations", i.name, i)
     }
